@@ -3,318 +3,707 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>化物語 - ランダムキャラクター</title>
+  <title>物語シリーズ — キャラクター</title>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --card-bg: #12121a;
-      --accent: #c8a0f0;
-      --accent2: #f08080;
-      --text: #e8e0f0;
-      --muted: #807090;
-      --border: #2a1a3a;
+      --bg: #07070f;
+      --surface: #0f0f1a;
+      --card: #13131f;
+      --border: #ffffff0f;
+      --accent: #b389f5;
+      --accent2: #f07878;
+      --accent3: #78b4f0;
+      --text: #ede8f8;
+      --muted: #7a6e90;
+      --dim: #3a3050;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Meiryo', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
     }
 
     header {
+      width: 100%;
+      padding: 2.5rem 1rem 1.5rem;
       text-align: center;
-      margin-bottom: 2.5rem;
+    }
+
+    header::after {
+      content: '';
+      display: block;
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 1.2rem auto 0;
     }
 
     header h1 {
-      font-size: 2.4rem;
-      letter-spacing: 0.3em;
-      color: var(--accent);
-      text-shadow: 0 0 20px rgba(200, 160, 240, 0.4);
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      letter-spacing: 0.35em;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     header p {
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
       color: var(--muted);
-      font-size: 0.9rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.2em;
     }
 
-    #card-container {
+    main {
       width: 100%;
-      max-width: 420px;
-      min-height: 540px;
+      max-width: 900px;
+      padding: 1.5rem 1rem 4rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      gap: 1.4rem;
+    }
+
+    /* ── Filter bars ── */
+    .filter-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding-left: 2px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: transparent;
+      border: 1px solid var(--dim);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(179, 137, 245, 0.1);
+    }
+
+    .filter-btn:hover:not(.active) {
+      border-color: var(--muted);
+      color: var(--text);
+    }
+
+    /* ── Card ── */
+    #card-wrap {
+      width: 100%;
+      min-height: 460px;
+      display: flex;
+      align-items: stretch;
     }
 
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
       width: 100%;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200,160,240,0.05);
-      animation: fadeIn 0.4s ease;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .card-image-wrap {
-      position: relative;
-      width: 100%;
-      height: 360px;
-      background: #0d0d16;
-      overflow: hidden;
+    @media (max-width: 580px) {
+      .card { grid-template-columns: 1fr; }
+      .card-image { height: 300px; }
     }
 
-    .card-image-wrap img {
+    .card-image {
+      position: relative;
+      overflow: hidden;
+      background: #0a0a14;
+    }
+
+    .card-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: top center;
       display: block;
+      transition: transform 0.6s ease;
     }
 
-    .card-image-wrap .role-badge {
+    .card:hover .card-image img { transform: scale(1.04); }
+
+    .card-image .role-tag {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(10, 10, 15, 0.75);
-      border: 1px solid var(--border);
-      color: var(--accent);
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      padding: 4px 10px;
+      bottom: 12px;
+      left: 12px;
+      padding: 4px 11px;
       border-radius: 20px;
-      backdrop-filter: blur(6px);
+      font-size: 0.67rem;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+    }
+
+    .role-tag.main {
+      background: rgba(179, 137, 245, 0.2);
+      border: 1px solid rgba(179, 137, 245, 0.4);
+      color: var(--accent);
+    }
+
+    .role-tag.supporting {
+      background: rgba(120, 180, 240, 0.15);
+      border: 1px solid rgba(120, 180, 240, 0.3);
+      color: var(--accent3);
+    }
+
+    .series-tags {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .series-tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      background: rgba(7,7,15,0.75);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #c8b8e8;
+      backdrop-filter: blur(4px);
+      line-height: 1.4;
     }
 
     .card-body {
-      padding: 1.4rem 1.6rem 1.6rem;
+      padding: 1.8rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .card-body h2 {
-      font-size: 1.5rem;
+    .char-name-en {
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.2;
       color: var(--text);
-      letter-spacing: 0.05em;
-      line-height: 1.3;
     }
 
-    .card-body .name-jp {
-      font-size: 0.85rem;
-      color: var(--muted);
+    .char-name-jp {
       margin-top: 4px;
-      letter-spacing: 0.08em;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
     }
 
-    .card-body .va-section {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
+    .meta-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 1.1rem;
     }
 
-    .card-body .va-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .card-body .va-name {
-      font-size: 0.95rem;
-      color: var(--accent2);
-    }
-
-    .skeleton {
-      background: linear-gradient(90deg, #1a1a2a 25%, #221a32 50%, #1a1a2a 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
+      font-size: 0.73rem;
     }
 
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .meta-chip .label { color: var(--muted); }
+    .meta-chip .value { color: var(--text); font-weight: 500; }
 
-    .skeleton-card {
+    .divider {
       width: 100%;
-      border-radius: 16px;
+      height: 1px;
+      background: var(--border);
+      margin: 1.1rem 0;
+    }
+
+    .desc-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .desc-text {
+      font-size: 0.86rem;
+      line-height: 1.8;
+      color: #b8a8d0;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .desc-text b, .desc-text strong { color: var(--text); }
+
+    .no-desc { font-size: 0.83rem; color: var(--muted); font-style: italic; }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .btn-row { display: flex; gap: 10px; }
+
+    .btn {
+      padding: 0.75rem 1.8rem;
+      border-radius: 40px;
+      font-size: 0.92rem;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #070410;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #c9adff;
+      box-shadow: 0 0 28px rgba(179,137,245,0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--dim);
+      color: var(--muted);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn:disabled { opacity: 0.3; cursor: default; }
+
+    .counter {
+      font-size: 0.73rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    /* ── Loading progress ── */
+    .loading-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      border-radius: 20px;
       overflow: hidden;
       border: 1px solid var(--border);
     }
 
-    .skeleton-img {
-      height: 360px;
+    @media (max-width: 580px) {
+      .loading-card { grid-template-columns: 1fr; }
+      .loading-img  { height: 300px; }
     }
 
-    .skeleton-body {
-      padding: 1.4rem 1.6rem 1.6rem;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .loading-img  { min-height: 460px; }
+    .loading-body { padding: 1.8rem 1.6rem; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+    .sk { border-radius: 6px; background: linear-gradient(90deg, #161624 25%, #1e1a30 50%, #161624 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    .skeleton-line {
-      height: 1em;
-    }
-
-    .skeleton-line.short { width: 55%; }
-    .skeleton-line.long  { width: 80%; }
-
-    #btn-next {
-      margin-top: 2rem;
-      padding: 0.85rem 2.4rem;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      font-size: 1rem;
-      letter-spacing: 0.2em;
-      border-radius: 40px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    }
-
-    #btn-next:hover:not(:disabled) {
-      background: var(--accent);
-      color: var(--bg);
-      box-shadow: 0 0 20px rgba(200, 160, 240, 0.35);
-    }
-
-    #btn-next:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    #counter {
-      margin-top: 1rem;
+    .loading-status {
       font-size: 0.78rem;
       color: var(--muted);
       letter-spacing: 0.1em;
     }
 
-    #error-msg {
-      color: var(--accent2);
-      text-align: center;
-      padding: 2rem;
-      font-size: 0.9rem;
-      line-height: 1.7;
+    .progress-bar-wrap {
+      width: 100%;
+      height: 3px;
+      background: var(--dim);
+      border-radius: 2px;
+      overflow: hidden;
     }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .error-box {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--accent2);
+      line-height: 1.9;
+    }
+
+    .error-box small { color: var(--muted); font-size: 0.78rem; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>化物語</h1>
-    <p>ランダムキャラクター</p>
-  </header>
 
-  <div id="card-container">
-    <div class="skeleton-card">
-      <div class="skeleton skeleton-img"></div>
-      <div class="skeleton-body">
-        <div class="skeleton skeleton-line long"></div>
-        <div class="skeleton skeleton-line short"></div>
+<header>
+  <h1>物語シリーズ</h1>
+  <p>MONOGATARI SERIES — CHARACTER</p>
+</header>
+
+<main>
+  <div class="filter-section" id="filter-section" style="visibility:hidden">
+    <div>
+      <div class="filter-label">シリーズ</div>
+      <div class="filter-row" id="series-filter">
+        <button class="filter-btn active" data-series="all">すべて</button>
+      </div>
+    </div>
+    <div>
+      <div class="filter-label">役割</div>
+      <div class="filter-row" id="role-filter">
+        <button class="filter-btn active" data-role="all">すべて</button>
+        <button class="filter-btn" data-role="MAIN">メイン</button>
+        <button class="filter-btn" data-role="SUPPORTING">サブ</button>
       </div>
     </div>
   </div>
 
-  <button id="btn-next" disabled>次のキャラクター</button>
-  <div id="counter"></div>
-
-  <script>
-    const ANIME_ID = 5081; // Bakemonogatari MAL ID
-    const API_URL = `https://api.jikan.moe/v4/anime/${ANIME_ID}/characters`;
-
-    let characters = [];
-    let lastIndex = -1;
-
-    const container = document.getElementById('card-container');
-    const btnNext   = document.getElementById('btn-next');
-    const counter   = document.getElementById('counter');
-
-    function pickRandom() {
-      if (characters.length === 0) return null;
-      if (characters.length === 1) return 0;
-      let idx;
-      do { idx = Math.floor(Math.random() * characters.length); }
-      while (idx === lastIndex);
-      lastIndex = idx;
-      return idx;
-    }
-
-    function renderCard(entry) {
-      const char   = entry.character;
-      const jaVA   = entry.voice_actors?.find(v => v.language === 'Japanese');
-      const imgUrl = char.images?.jpg?.image_url || char.images?.webp?.image_url || '';
-      const role   = entry.role === 'Main' ? 'メイン' : 'サブ';
-
-      container.innerHTML = `
-        <div class="card">
-          <div class="card-image-wrap">
-            ${imgUrl
-              ? `<img src="${imgUrl}" alt="${char.name}" loading="lazy" />`
-              : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:3rem;">？</div>`
-            }
-            <span class="role-badge">${role}</span>
-          </div>
-          <div class="card-body">
-            <h2>${char.name}</h2>
-            ${jaVA ? `
-              <div class="va-section">
-                <div class="va-label">声優</div>
-                <div class="va-name">${jaVA.person.name}</div>
-              </div>
-            ` : ''}
-          </div>
+  <div id="card-wrap">
+    <div class="loading-card">
+      <div class="sk loading-img"></div>
+      <div class="loading-body">
+        <div class="loading-status" id="loading-status">データ取得中…</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progress-bar" style="width:0%"></div>
         </div>
-      `;
-      counter.textContent = `${characters.indexOf(entry) + 1} / ${characters.length} キャラクター`;
-    }
+      </div>
+    </div>
+  </div>
 
-    function showNext() {
-      const idx = pickRandom();
-      if (idx === null) return;
-      renderCard(characters[idx]);
-    }
+  <div class="controls">
+    <div class="btn-row">
+      <button class="btn btn-outline" id="btn-prev" disabled>← 戻る</button>
+      <button class="btn btn-primary" id="btn-next" disabled>ランダム表示</button>
+    </div>
+    <div class="counter" id="counter"></div>
+  </div>
+</main>
 
-    async function init() {
-      try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        characters = data.data || [];
+<script>
+const ANILIST = 'https://graphql.anilist.co';
 
-        if (characters.length === 0) {
-          container.innerHTML = `<div id="error-msg">キャラクターが見つかりませんでした。</div>`;
-          return;
+// 物語シリーズ全作品
+const SERIES_LIST = [
+  { search: 'Bakemonogatari',                       label: '化物語' },
+  { search: 'Nisemonogatari',                       label: '偽物語' },
+  { search: 'Nekomonogatari Kuro',                  label: 'ネコ物語（黒）' },
+  { search: 'Monogatari Series Second Season',      label: '物語シリーズ セカンドシーズン' },
+  { search: 'Hanamonogatari',                       label: '花物語' },
+  { search: 'Tsukimonogatari',                      label: '憑物語' },
+  { search: 'Owarimonogatari',                      label: '終物語' },
+  { search: 'Koyomimonogatari',                     label: '暦物語' },
+  { search: 'Owarimonogatari 2nd Season',           label: '終物語（下）' },
+  { search: 'Zoku Owarimonogatari',                 label: '続・終物語' },
+  { search: 'Musubi no Ichihi',                     label: '結び の 一 日' },
+];
+
+const QUERY = `
+query ($search: String, $page: Int) {
+  Media(search: $search, type: ANIME) {
+    id
+    title { romaji native }
+    characters(sort: ROLE, page: $page, perPage: 25) {
+      pageInfo { hasNextPage }
+      edges {
+        role
+        node {
+          id
+          name { full native }
+          image { large }
+          description(asHtml: false)
+          gender
+          age
+          dateOfBirth { month day }
         }
-
-        showNext();
-        btnNext.disabled = false;
-      } catch (e) {
-        container.innerHTML = `<div id="error-msg">データの取得に失敗しました。<br>しばらくしてからリロードしてください。<br><small style="color:var(--muted)">${e.message}</small></div>`;
       }
     }
+  }
+}`;
 
-    btnNext.addEventListener('click', showNext);
-    init();
-  </script>
+// Map: seriesLabel → edges[]
+const seriesMap = new Map();
+// Map: charId → { edge, seriesLabels[] }
+const charMap   = new Map();
+
+let filtered   = [];
+let history    = [];
+let historyIdx = -1;
+let seriesFilter = 'all';
+let roleFilter   = 'all';
+
+const wrap       = document.getElementById('card-wrap');
+const btnNext    = document.getElementById('btn-next');
+const btnPrev    = document.getElementById('btn-prev');
+const counter    = document.getElementById('counter');
+const filterSec  = document.getElementById('filter-section');
+const seriesFilterRow = document.getElementById('series-filter');
+const roleFilterRow   = document.getElementById('role-filter');
+const loadingStatus   = document.getElementById('loading-status');
+const progressBar     = document.getElementById('progress-bar');
+
+// ── Fetch one series (all pages) ──────────────────────────
+async function fetchSeries(search, label) {
+  let page = 1, hasNext = true;
+  const edges = [];
+
+  while (hasNext) {
+    const res = await fetch(ANILIST, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: QUERY, variables: { search, page } })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.errors || !json.data.Media) break;
+
+    const chars = json.data.Media.characters;
+    edges.push(...chars.edges);
+    hasNext = chars.pageInfo.hasNextPage;
+    page++;
+  }
+
+  seriesMap.set(label, edges);
+
+  // Merge into charMap (deduplicate by character id)
+  for (const edge of edges) {
+    const id = edge.node.id;
+    if (charMap.has(id)) {
+      charMap.get(id).seriesLabels.push(label);
+      // keep highest role (MAIN > SUPPORTING)
+      if (edge.role === 'MAIN') charMap.get(id).edge.role = 'MAIN';
+    } else {
+      charMap.set(id, { edge, seriesLabels: [label] });
+    }
+  }
+}
+
+// ── Fetch all series sequentially ────────────────────────
+async function fetchAll() {
+  for (let i = 0; i < SERIES_LIST.length; i++) {
+    const { search, label } = SERIES_LIST[i];
+    loadingStatus.textContent = `「${label}」を取得中… (${i + 1}/${SERIES_LIST.length})`;
+    progressBar.style.width = `${((i + 1) / SERIES_LIST.length) * 100}%`;
+    try { await fetchSeries(search, label); } catch(e) { /* skip failed */ }
+    // Small delay to respect rate limit
+    if (i < SERIES_LIST.length - 1) await new Promise(r => setTimeout(r, 350));
+  }
+}
+
+// ── Render ────────────────────────────────────────────────
+function sanitizeDesc(raw) {
+  if (!raw) return '';
+  return raw
+    .replace(/~![\s\S]*?!~/g, '<span style="background:var(--dim);color:var(--dim);border-radius:3px;padding:0 3px;cursor:pointer" onclick="this.style.color=\'var(--text)\'">ネタバレ</span>')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/__(.+?)__/g, '<b>$1</b>')
+    .replace(/\*(.+?)\*/g, '<i>$1</i>')
+    .replace(/_(.+?)_/g, '<i>$1</i>')
+    .replace(/\n/g, '<br>');
+}
+
+function renderCard({ edge, seriesLabels }) {
+  const ch = edge.node;
+  const role = edge.role;
+  const img  = ch.image?.large || '';
+  const nameEn = ch.name?.full   || '―';
+  const nameJp = ch.name?.native || '';
+  const desc   = sanitizeDesc(ch.description);
+
+  const chips = [];
+  if (ch.gender) chips.push(`<div class="meta-chip"><span class="label">性別</span><span class="value">${ch.gender === 'Female' ? '女性' : ch.gender === 'Male' ? '男性' : ch.gender}</span></div>`);
+  if (ch.age)    chips.push(`<div class="meta-chip"><span class="label">年齢</span><span class="value">${ch.age}</span></div>`);
+  if (ch.dateOfBirth?.month && ch.dateOfBirth?.day)
+    chips.push(`<div class="meta-chip"><span class="label">誕生日</span><span class="value">${ch.dateOfBirth.month}/${ch.dateOfBirth.day}</span></div>`);
+
+  const roleLabel = role === 'MAIN' ? 'メイン' : 'サブ';
+  const roleClass = role === 'MAIN' ? 'main' : 'supporting';
+
+  const seriesTagsHtml = seriesLabels
+    .map(l => `<span class="series-tag">${l}</span>`)
+    .join('');
+
+  wrap.innerHTML = `
+    <div class="card">
+      <div class="card-image">
+        ${img
+          ? `<img src="${img}" alt="${nameEn}" loading="eager" />`
+          : `<div style="height:100%;min-height:460px;display:flex;align-items:center;justify-content:center;font-size:4rem;color:var(--dim)">？</div>`
+        }
+        <div class="series-tags">${seriesTagsHtml}</div>
+        <span class="role-tag ${roleClass}">${roleLabel}</span>
+      </div>
+      <div class="card-body">
+        <div class="char-name-en">${nameEn}</div>
+        ${nameJp ? `<div class="char-name-jp">${nameJp}</div>` : ''}
+        ${chips.length ? `<div class="meta-grid">${chips.join('')}</div>` : ''}
+        <div class="divider"></div>
+        <div class="desc-label">CHARACTER</div>
+        ${desc
+          ? `<div class="desc-text">${desc}</div>`
+          : `<div class="no-desc">説明なし</div>`
+        }
+      </div>
+    </div>
+  `;
+
+  const total = filtered.length;
+  const pos   = filtered.indexOf(charMap.get(ch.id));
+  counter.textContent = total ? `${pos >= 0 ? pos + 1 : '?'} / ${total} キャラクター` : '';
+}
+
+// ── Filter + pick ─────────────────────────────────────────
+function buildFiltered() {
+  const all = [...charMap.values()];
+  filtered = all.filter(({ edge, seriesLabels }) => {
+    const matchSeries = seriesFilter === 'all' || seriesLabels.includes(seriesFilter);
+    const matchRole   = roleFilter   === 'all' || edge.role === roleFilter;
+    return matchSeries && matchRole;
+  });
+}
+
+function pickRandom() {
+  if (filtered.length === 0) return null;
+  const current = history[historyIdx];
+  if (filtered.length === 1) return filtered[0];
+  let pick;
+  do { pick = filtered[Math.floor(Math.random() * filtered.length)]; }
+  while (pick === current);
+  return pick;
+}
+
+function showNext() {
+  const entry = pickRandom();
+  if (!entry) return;
+  history = history.slice(0, historyIdx + 1);
+  history.push(entry);
+  historyIdx++;
+  renderCard(entry);
+  btnPrev.disabled = historyIdx <= 0;
+}
+
+function showPrev() {
+  if (historyIdx <= 0) return;
+  historyIdx--;
+  renderCard(history[historyIdx]);
+  btnPrev.disabled = historyIdx <= 0;
+}
+
+function resetAndShow() {
+  buildFiltered();
+  history    = [];
+  historyIdx = -1;
+  btnPrev.disabled = true;
+  if (filtered.length > 0) showNext();
+  else wrap.innerHTML = `<div class="error-box">該当キャラクターなし</div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  try {
+    await fetchAll();
+
+    if (charMap.size === 0) {
+      wrap.innerHTML = `<div class="error-box">キャラクターが見つかりませんでした。</div>`;
+      return;
+    }
+
+    // Build series filter buttons
+    for (const label of seriesMap.keys()) {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.series = label;
+      btn.textContent = label;
+      seriesFilterRow.appendChild(btn);
+    }
+
+    filterSec.style.visibility = 'visible';
+    btnNext.disabled = false;
+
+    buildFiltered();
+    showNext();
+
+    // Series filter
+    seriesFilterRow.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      seriesFilterRow.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      seriesFilter = btn.dataset.series;
+      resetAndShow();
+    });
+
+    // Role filter
+    roleFilterRow.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      roleFilterRow.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      roleFilter = btn.dataset.role;
+      resetAndShow();
+    });
+
+  } catch (e) {
+    wrap.innerHTML = `
+      <div class="error-box">
+        データの取得に失敗しました。<br>
+        しばらくしてからリロードしてください。<br>
+        <small>${e.message}</small>
+      </div>`;
+  }
+}
+
+btnNext.addEventListener('click', showNext);
+btnPrev.addEventListener('click', showPrev);
+init();
+</script>
 </body>
 </html>
