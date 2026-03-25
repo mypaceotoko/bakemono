@@ -213,7 +213,7 @@
       padding: 1.8rem 1.6rem;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto;
     }
 
     .char-name-en {
@@ -270,10 +270,12 @@
       font-size: 0.86rem;
       line-height: 1.8;
       color: #b8a8d0;
-      display: -webkit-box;
-      -webkit-line-clamp: 6;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+    }
+
+    .desc-loading {
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
     }
 
     .desc-text b, .desc-text strong { color: var(--text); }
@@ -381,33 +383,6 @@
 
     .error-box small { color: var(--muted); font-size: 0.78rem; }
 
-    /* ── Description + translate ── */
-    .desc-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .btn-translate {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.68rem;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-      border: 1px solid var(--dim);
-      background: transparent;
-      color: var(--muted);
-      transition: all 0.18s;
-    }
-
-    .btn-translate:hover { border-color: var(--accent3); color: var(--accent3); }
-    .btn-translate:disabled { opacity: 0.4; cursor: default; }
-    .btn-translate.translated { border-color: var(--accent3); color: var(--accent3); background: rgba(120,180,240,0.08); }
-
     /* ── Quote ── */
     .quote-box {
       margin-top: 1rem;
@@ -433,34 +408,6 @@
       font-style: italic;
     }
 
-    .quote-footer {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      margin-top: 0.6rem;
-      gap: 8px;
-    }
-
-    .btn-voice {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      border: 1px solid rgba(179, 137, 245, 0.35);
-      background: rgba(179, 137, 245, 0.08);
-      color: var(--accent);
-      transition: all 0.18s;
-    }
-
-    .btn-voice:hover { background: rgba(179, 137, 245, 0.18); box-shadow: 0 0 14px rgba(179,137,245,0.2); }
-    .btn-voice.playing { border-color: var(--accent2); color: var(--accent2); background: rgba(240,120,120,0.08); }
-
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-    .btn-voice.playing { animation: pulse 1s infinite; }
   </style>
 </head>
 <body>
@@ -512,24 +459,23 @@
 <script>
 const ANILIST = 'https://graphql.anilist.co';
 
-// 物語シリーズ全作品
+// 物語シリーズ アニメ化済み作品（AniList ID で確実に指定）
 const SERIES_LIST = [
-  { search: 'Bakemonogatari',                       label: '化物語' },
-  { search: 'Nisemonogatari',                       label: '偽物語' },
-  { search: 'Nekomonogatari Kuro',                  label: 'ネコ物語（黒）' },
-  { search: 'Monogatari Series Second Season',      label: '物語シリーズ セカンドシーズン' },
-  { search: 'Hanamonogatari',                       label: '花物語' },
-  { search: 'Tsukimonogatari',                      label: '憑物語' },
-  { search: 'Owarimonogatari',                      label: '終物語' },
-  { search: 'Koyomimonogatari',                     label: '暦物語' },
-  { search: 'Owarimonogatari 2nd Season',           label: '終物語（下）' },
-  { search: 'Zoku Owarimonogatari',                 label: '続・終物語' },
-  { search: 'Musubi no Ichihi',                     label: '結び の 一 日' },
+  { id: 5081,  label: '化物語' },
+  { id: 11597, label: '偽物語' },
+  { id: 14893, label: 'ネコ物語（黒）' },
+  { id: 17074, label: '物語シリーズ セカンドシーズン' },
+  { id: 20517, label: '花物語' },
+  { id: 21647, label: '憑物語' },
+  { id: 21855, label: '終物語' },
+  { id: 21281, label: '暦物語' },
+  { id: 97986, label: '終物語（下）' },
+  { id: 99561, label: '続・終物語' },
 ];
 
 const QUERY = `
-query ($search: String, $page: Int) {
-  Media(search: $search, type: ANIME) {
+query ($id: Int, $page: Int) {
+  Media(id: $id, type: ANIME) {
     id
     title { romaji native }
     characters(sort: ROLE, page: $page, perPage: 25) {
@@ -577,7 +523,7 @@ const loadingStatus   = document.getElementById('loading-status');
 const progressBar     = document.getElementById('progress-bar');
 
 // ── Fetch one series (all pages) ──────────────────────────
-async function fetchSeries(search, label) {
+async function fetchSeries(id, label) {
   let page = 1, hasNext = true;
   const edges = [];
 
@@ -585,7 +531,7 @@ async function fetchSeries(search, label) {
     const res = await fetch(ANILIST, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: QUERY, variables: { search, page } })
+      body: JSON.stringify({ query: QUERY, variables: { id, page } })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
@@ -599,15 +545,13 @@ async function fetchSeries(search, label) {
 
   seriesMap.set(label, edges);
 
-  // Merge into charMap (deduplicate by character id)
   for (const edge of edges) {
-    const id = edge.node.id;
-    if (charMap.has(id)) {
-      charMap.get(id).seriesLabels.push(label);
-      // keep highest role (MAIN > SUPPORTING)
-      if (edge.role === 'MAIN') charMap.get(id).edge.role = 'MAIN';
+    const cid = edge.node.id;
+    if (charMap.has(cid)) {
+      charMap.get(cid).seriesLabels.push(label);
+      if (edge.role === 'MAIN') charMap.get(cid).edge.role = 'MAIN';
     } else {
-      charMap.set(id, { edge, seriesLabels: [label] });
+      charMap.set(cid, { edge, seriesLabels: [label] });
     }
   }
 }
@@ -615,11 +559,10 @@ async function fetchSeries(search, label) {
 // ── Fetch all series sequentially ────────────────────────
 async function fetchAll() {
   for (let i = 0; i < SERIES_LIST.length; i++) {
-    const { search, label } = SERIES_LIST[i];
+    const { id, label } = SERIES_LIST[i];
     loadingStatus.textContent = `「${label}」を取得中… (${i + 1}/${SERIES_LIST.length})`;
     progressBar.style.width = `${((i + 1) / SERIES_LIST.length) * 100}%`;
-    try { await fetchSeries(search, label); } catch(e) { /* skip failed */ }
-    // Small delay to respect rate limit
+    try { await fetchSeries(id, label); } catch(e) { /* skip failed */ }
     if (i < SERIES_LIST.length - 1) await new Promise(r => setTimeout(r, 350));
   }
 }
@@ -699,63 +642,19 @@ const TRANS_CACHE_KEY = 'monogatari_trans_v1';
 let transCache = {};
 try { transCache = JSON.parse(localStorage.getItem(TRANS_CACHE_KEY) || '{}'); } catch {}
 
-async function translateText(text, charId) {
-  const cacheId = `c${charId}`;
-  if (transCache[cacheId]) return transCache[cacheId];
+async function translateText(plainText, charId) {
+  const key = `c${charId}`;
+  if (transCache[key]) return transCache[key];
 
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURIComponent(text)}`;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURIComponent(plainText)}`;
   const res  = await fetch(url);
   if (!res.ok) throw new Error(`translate HTTP ${res.status}`);
   const data = await res.json();
-  const translated = data[0].map(seg => seg[0]).join('');
+  const ja   = data[0].map(seg => seg[0]).join('');
 
-  transCache[cacheId] = translated;
+  transCache[key] = ja;
   try { localStorage.setItem(TRANS_CACHE_KEY, JSON.stringify(transCache)); } catch {}
-  return translated;
-}
-
-// ── Voice (Web Speech API) ────────────────────────────────
-let currentUtterance = null;
-let voicesReady = false;
-
-function getJaVoice() {
-  return window.speechSynthesis?.getVoices().find(v => v.lang.startsWith('ja')) || null;
-}
-
-function speakText(text, btnEl) {
-  if (!window.speechSynthesis) return;
-
-  // Stop if already playing
-  if (currentUtterance) {
-    window.speechSynthesis.cancel();
-    currentUtterance = null;
-    if (btnEl) { btnEl.classList.remove('playing'); btnEl.textContent = '▶ 音声を聞く'; }
-    return;
-  }
-
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang  = 'ja-JP';
-  utter.rate  = 0.88;
-  utter.pitch = 1.05;
-  const v = getJaVoice();
-  if (v) utter.voice = v;
-
-  utter.onstart = () => {
-    currentUtterance = utter;
-    if (btnEl) { btnEl.classList.add('playing'); btnEl.textContent = '■ 停止'; }
-  };
-  utter.onend = utter.onerror = () => {
-    currentUtterance = null;
-    if (btnEl) { btnEl.classList.remove('playing'); btnEl.textContent = '▶ 音声を聞く'; }
-  };
-
-  window.speechSynthesis.speak(utter);
-}
-
-// preload voices
-if (window.speechSynthesis) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.addEventListener('voiceschanged', () => { voicesReady = true; });
+  return ja;
 }
 
 // ── Sanitize description ───────────────────────────────────
@@ -772,16 +671,12 @@ function sanitizeDesc(raw) {
 
 // ── Render ────────────────────────────────────────────────
 function renderCard({ edge, seriesLabels }) {
-  window.speechSynthesis?.cancel();
-  currentUtterance = null;
-
   const ch   = edge.node;
   const role = edge.role;
   const va   = edge.voiceActors?.[0];
   const img  = ch.image?.large || '';
   const nameEn = ch.name?.full   || '―';
   const nameJp = ch.name?.native || '';
-  const desc   = sanitizeDesc(ch.description);
 
   const chips = [];
   if (ch.gender) chips.push(`<div class="meta-chip"><span class="label">性別</span><span class="value">${ch.gender === 'Female' ? '女性' : ch.gender === 'Male' ? '男性' : ch.gender}</span></div>`);
@@ -793,17 +688,18 @@ function renderCard({ edge, seriesLabels }) {
 
   const roleLabel = role === 'MAIN' ? 'メイン' : 'サブ';
   const roleClass = role === 'MAIN' ? 'main' : 'supporting';
-
   const seriesTagsHtml = seriesLabels.map(l => `<span class="series-tag">${l}</span>`).join('');
 
-  // Quote
   const quotes = CHAR_QUOTES[nameEn] || [];
   const quote  = quotes.length ? quotes[Math.floor(Math.random() * quotes.length)] : null;
-  const hasTTS = !!window.speechSynthesis;
 
-  // Cached translation?
-  const cacheId = `c${ch.id}`;
-  const cachedJa = transCache[cacheId];
+  // Use cached translation if available
+  const cachedJa = transCache[`c${ch.id}`];
+  const descHtml = ch.description
+    ? (cachedJa
+        ? `<div class="desc-text" id="desc-text">${cachedJa}</div>`
+        : `<div class="desc-loading" id="desc-text">翻訳中…</div>`)
+    : `<div class="no-desc">説明なし</div>`;
 
   wrap.innerHTML = `
     <div class="card">
@@ -819,26 +715,13 @@ function renderCard({ edge, seriesLabels }) {
         <div class="char-name-en">${nameEn}</div>
         ${nameJp ? `<div class="char-name-jp">${nameJp}</div>` : ''}
         ${chips.length ? `<div class="meta-grid">${chips.join('')}</div>` : ''}
-
         <div class="divider"></div>
-
-        <div class="desc-header">
-          <div class="desc-label" style="margin-bottom:0">CHARACTER</div>
-          ${desc ? `<button class="btn-translate${cachedJa ? ' translated' : ''}" id="btn-trans" data-charid="${ch.id}">${cachedJa ? '✓ 翻訳済み' : '🌐 日本語に翻訳'}</button>` : ''}
-        </div>
-        ${desc
-          ? `<div class="desc-text" id="desc-text">${cachedJa || desc}</div>`
-          : `<div class="no-desc">説明なし</div>`
-        }
-
+        <div class="desc-label">CHARACTER</div>
+        ${descHtml}
         ${quote ? `
         <div class="quote-box">
           <div class="quote-label">QUOTE</div>
           <div class="quote-text">「${quote}」</div>
-          ${hasTTS ? `
-          <div class="quote-footer">
-            <button class="btn-voice" id="btn-voice">▶ 音声を聞く</button>
-          </div>` : ''}
         </div>` : ''}
       </div>
     </div>
@@ -848,30 +731,16 @@ function renderCard({ edge, seriesLabels }) {
   const pos   = filtered.indexOf(charMap.get(ch.id));
   counter.textContent = total ? `${pos >= 0 ? pos + 1 : '?'} / ${total} キャラクター` : '';
 
-  // Translate button
-  const btnTrans = document.getElementById('btn-trans');
-  if (btnTrans) {
-    btnTrans.addEventListener('click', async () => {
-      if (btnTrans.classList.contains('translated')) return;
-      btnTrans.disabled = true;
-      btnTrans.textContent = '翻訳中…';
-      try {
-        const plainText = ch.description.replace(/~![\s\S]*?!~/g, '').replace(/[*_]/g, '');
-        const ja = await translateText(plainText, ch.id);
-        document.getElementById('desc-text').textContent = ja;
-        btnTrans.classList.add('translated');
-        btnTrans.textContent = '✓ 翻訳済み';
-      } catch {
-        btnTrans.disabled = false;
-        btnTrans.textContent = '翻訳失敗 — 再試行';
-      }
+  // Auto-translate if not cached
+  if (ch.description && !cachedJa) {
+    const plainText = ch.description.replace(/~![\s\S]*?!~/g, '').replace(/[*_]/g, '');
+    translateText(plainText, ch.id).then(ja => {
+      const el = document.getElementById('desc-text');
+      if (el) { el.className = 'desc-text'; el.textContent = ja; }
+    }).catch(() => {
+      const el = document.getElementById('desc-text');
+      if (el) { el.className = 'desc-text'; el.textContent = ch.description; }
     });
-  }
-
-  // Voice button
-  const btnVoice = document.getElementById('btn-voice');
-  if (btnVoice && quote) {
-    btnVoice.addEventListener('click', () => speakText(quote, btnVoice));
   }
 }
 
