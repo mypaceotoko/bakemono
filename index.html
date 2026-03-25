@@ -380,6 +380,87 @@
     }
 
     .error-box small { color: var(--muted); font-size: 0.78rem; }
+
+    /* ── Description + translate ── */
+    .desc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-translate {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      border: 1px solid var(--dim);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.18s;
+    }
+
+    .btn-translate:hover { border-color: var(--accent3); color: var(--accent3); }
+    .btn-translate:disabled { opacity: 0.4; cursor: default; }
+    .btn-translate.translated { border-color: var(--accent3); color: var(--accent3); background: rgba(120,180,240,0.08); }
+
+    /* ── Quote ── */
+    .quote-box {
+      margin-top: 1rem;
+      padding: 0.9rem 1.1rem;
+      border-left: 2px solid var(--accent);
+      background: rgba(179, 137, 245, 0.05);
+      border-radius: 0 10px 10px 0;
+      position: relative;
+    }
+
+    .quote-label {
+      font-size: 0.63rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    .quote-text {
+      font-size: 0.9rem;
+      line-height: 1.85;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .quote-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 0.6rem;
+      gap: 8px;
+    }
+
+    .btn-voice {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      border: 1px solid rgba(179, 137, 245, 0.35);
+      background: rgba(179, 137, 245, 0.08);
+      color: var(--accent);
+      transition: all 0.18s;
+    }
+
+    .btn-voice:hover { background: rgba(179, 137, 245, 0.18); box-shadow: 0 0 14px rgba(179,137,245,0.2); }
+    .btn-voice.playing { border-color: var(--accent2); color: var(--accent2); background: rgba(240,120,120,0.08); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .btn-voice.playing { animation: pulse 1s infinite; }
   </style>
 </head>
 <body>
@@ -455,6 +536,11 @@ query ($search: String, $page: Int) {
       pageInfo { hasNextPage }
       edges {
         role
+        voiceActors(language: JAPANESE) {
+          id
+          name { full native }
+          image { large }
+        }
         node {
           id
           name { full native }
@@ -538,7 +624,141 @@ async function fetchAll() {
   }
 }
 
-// ── Render ────────────────────────────────────────────────
+// ── Character quotes (Japanese) ───────────────────────────
+const CHAR_QUOTES = {
+  'Koyomi Araragi': [
+    '正義の味方になりたい。ただ、誰かひとりの正義の味方でいい。',
+    '助けたいから助ける。理由なんてそれだけでいい。',
+    '俺は人間をやめた。でも、人間であることをやめるつもりはない。',
+  ],
+  'Hitagi Senjougahara': [
+    '好き。大好き。世界中の誰よりも。',
+    '私の全部を、あなたに差し上げましょう。',
+    'あなたを縛る鎖に、私はなりたい。',
+  ],
+  'Tsubasa Hanekawa': [
+    '知らないことは知らないよ。私が知っているのは、私が知っていることだけ。',
+    'あなたのことが好き。でも、あなたが好きなのは私じゃない。それは分かってる。',
+    '羨ましいと思う気持ちさえ、ずっと抑えてきたんだよ。',
+  ],
+  'Shinobu Oshino': [
+    '余は怒っておらぬ。ただ、少々不機嫌なだけじゃ。',
+    'ドーナツは完全な食べ物じゃ。穴があるからこそ完全なのじゃ。',
+    '余の名を呼ぶな、と言っておるのに。',
+  ],
+  'Mayoi Hachikuji': [
+    'はっはっは。じゃあ絶対教えないもんねー。',
+    '迷子になりたいから、迷子になっているんです。',
+    'た、たっち。',
+  ],
+  'Suruga Kanbaru': [
+    '先輩のためなら、何でもします。本当に何でも。',
+    '私の左手は、悪魔でも願いを叶えます。',
+    '負けるとわかっていても、戦う理由がある。',
+  ],
+  'Nadeko Sengoku': [
+    '阿良々木くん、大好き。',
+    'みんな、死ねばいいのに。',
+    '私ね、神様になったんだよ。',
+  ],
+  'Deishuu Kaiki': [
+    '人を傷つけるのは、いつだって人への愛情だ。',
+    '本物は人を傷つける。偽物は人を救う。だから俺は偽物を売る。',
+    '嘘は嘘として扱ってやるのが、礼儀というものだ。',
+  ],
+  'Yotsugi Ononoki': [
+    'なんてね、冗談ですよ。',
+    '感情はありません。それが私のスペックです。',
+    'ゼロです。ゼロ距離です。',
+  ],
+  'Ougi Oshino': [
+    '答えは、いつも問いの中にあります。',
+    '正しいことが、正しいとは限らない。',
+    '阿良々木先輩は、気づいていないのですか？',
+  ],
+  'Meme Oshino': [
+    '怪異は怪異でしかない。助けるのはあくまで人の側だぜ。',
+    '人を助けるというのはね、その人自身が助かろうとしなきゃ、できないことなんだよ。',
+  ],
+  'Karen Araragi': [
+    '正義の味方だから！ それだけで十分だろ！',
+    '私は絶対に諦めない。',
+  ],
+  'Tsukihi Araragi': [
+    '私は偽物なのかもしれない。でも偽物だからこそ、本物より本物らしくいられる。',
+    '兄ちゃんは本当にどうしようもないな。',
+  ],
+  'Rouka Numachi': [
+    '不幸は自分だけのものにしたい。',
+    '誰かの不幸を肩代わりして、私は生きているんだ。',
+  ],
+};
+
+// ── Translation (Google unofficial, cached) ───────────────
+const TRANS_CACHE_KEY = 'monogatari_trans_v1';
+let transCache = {};
+try { transCache = JSON.parse(localStorage.getItem(TRANS_CACHE_KEY) || '{}'); } catch {}
+
+async function translateText(text, charId) {
+  const cacheId = `c${charId}`;
+  if (transCache[cacheId]) return transCache[cacheId];
+
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURIComponent(text)}`;
+  const res  = await fetch(url);
+  if (!res.ok) throw new Error(`translate HTTP ${res.status}`);
+  const data = await res.json();
+  const translated = data[0].map(seg => seg[0]).join('');
+
+  transCache[cacheId] = translated;
+  try { localStorage.setItem(TRANS_CACHE_KEY, JSON.stringify(transCache)); } catch {}
+  return translated;
+}
+
+// ── Voice (Web Speech API) ────────────────────────────────
+let currentUtterance = null;
+let voicesReady = false;
+
+function getJaVoice() {
+  return window.speechSynthesis?.getVoices().find(v => v.lang.startsWith('ja')) || null;
+}
+
+function speakText(text, btnEl) {
+  if (!window.speechSynthesis) return;
+
+  // Stop if already playing
+  if (currentUtterance) {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+    if (btnEl) { btnEl.classList.remove('playing'); btnEl.textContent = '▶ 音声を聞く'; }
+    return;
+  }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang  = 'ja-JP';
+  utter.rate  = 0.88;
+  utter.pitch = 1.05;
+  const v = getJaVoice();
+  if (v) utter.voice = v;
+
+  utter.onstart = () => {
+    currentUtterance = utter;
+    if (btnEl) { btnEl.classList.add('playing'); btnEl.textContent = '■ 停止'; }
+  };
+  utter.onend = utter.onerror = () => {
+    currentUtterance = null;
+    if (btnEl) { btnEl.classList.remove('playing'); btnEl.textContent = '▶ 音声を聞く'; }
+  };
+
+  window.speechSynthesis.speak(utter);
+}
+
+// preload voices
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', () => { voicesReady = true; });
+}
+
+// ── Sanitize description ───────────────────────────────────
 function sanitizeDesc(raw) {
   if (!raw) return '';
   return raw
@@ -550,9 +770,14 @@ function sanitizeDesc(raw) {
     .replace(/\n/g, '<br>');
 }
 
+// ── Render ────────────────────────────────────────────────
 function renderCard({ edge, seriesLabels }) {
-  const ch = edge.node;
+  window.speechSynthesis?.cancel();
+  currentUtterance = null;
+
+  const ch   = edge.node;
   const role = edge.role;
+  const va   = edge.voiceActors?.[0];
   const img  = ch.image?.large || '';
   const nameEn = ch.name?.full   || '―';
   const nameJp = ch.name?.native || '';
@@ -563,13 +788,22 @@ function renderCard({ edge, seriesLabels }) {
   if (ch.age)    chips.push(`<div class="meta-chip"><span class="label">年齢</span><span class="value">${ch.age}</span></div>`);
   if (ch.dateOfBirth?.month && ch.dateOfBirth?.day)
     chips.push(`<div class="meta-chip"><span class="label">誕生日</span><span class="value">${ch.dateOfBirth.month}/${ch.dateOfBirth.day}</span></div>`);
+  if (va)
+    chips.push(`<div class="meta-chip"><span class="label">声優</span><span class="value" style="color:var(--accent2)">${va.name?.native || va.name?.full || ''}</span></div>`);
 
   const roleLabel = role === 'MAIN' ? 'メイン' : 'サブ';
   const roleClass = role === 'MAIN' ? 'main' : 'supporting';
 
-  const seriesTagsHtml = seriesLabels
-    .map(l => `<span class="series-tag">${l}</span>`)
-    .join('');
+  const seriesTagsHtml = seriesLabels.map(l => `<span class="series-tag">${l}</span>`).join('');
+
+  // Quote
+  const quotes = CHAR_QUOTES[nameEn] || [];
+  const quote  = quotes.length ? quotes[Math.floor(Math.random() * quotes.length)] : null;
+  const hasTTS = !!window.speechSynthesis;
+
+  // Cached translation?
+  const cacheId = `c${ch.id}`;
+  const cachedJa = transCache[cacheId];
 
   wrap.innerHTML = `
     <div class="card">
@@ -585,12 +819,27 @@ function renderCard({ edge, seriesLabels }) {
         <div class="char-name-en">${nameEn}</div>
         ${nameJp ? `<div class="char-name-jp">${nameJp}</div>` : ''}
         ${chips.length ? `<div class="meta-grid">${chips.join('')}</div>` : ''}
+
         <div class="divider"></div>
-        <div class="desc-label">CHARACTER</div>
+
+        <div class="desc-header">
+          <div class="desc-label" style="margin-bottom:0">CHARACTER</div>
+          ${desc ? `<button class="btn-translate${cachedJa ? ' translated' : ''}" id="btn-trans" data-charid="${ch.id}">${cachedJa ? '✓ 翻訳済み' : '🌐 日本語に翻訳'}</button>` : ''}
+        </div>
         ${desc
-          ? `<div class="desc-text">${desc}</div>`
+          ? `<div class="desc-text" id="desc-text">${cachedJa || desc}</div>`
           : `<div class="no-desc">説明なし</div>`
         }
+
+        ${quote ? `
+        <div class="quote-box">
+          <div class="quote-label">QUOTE</div>
+          <div class="quote-text">「${quote}」</div>
+          ${hasTTS ? `
+          <div class="quote-footer">
+            <button class="btn-voice" id="btn-voice">▶ 音声を聞く</button>
+          </div>` : ''}
+        </div>` : ''}
       </div>
     </div>
   `;
@@ -598,6 +847,32 @@ function renderCard({ edge, seriesLabels }) {
   const total = filtered.length;
   const pos   = filtered.indexOf(charMap.get(ch.id));
   counter.textContent = total ? `${pos >= 0 ? pos + 1 : '?'} / ${total} キャラクター` : '';
+
+  // Translate button
+  const btnTrans = document.getElementById('btn-trans');
+  if (btnTrans) {
+    btnTrans.addEventListener('click', async () => {
+      if (btnTrans.classList.contains('translated')) return;
+      btnTrans.disabled = true;
+      btnTrans.textContent = '翻訳中…';
+      try {
+        const plainText = ch.description.replace(/~![\s\S]*?!~/g, '').replace(/[*_]/g, '');
+        const ja = await translateText(plainText, ch.id);
+        document.getElementById('desc-text').textContent = ja;
+        btnTrans.classList.add('translated');
+        btnTrans.textContent = '✓ 翻訳済み';
+      } catch {
+        btnTrans.disabled = false;
+        btnTrans.textContent = '翻訳失敗 — 再試行';
+      }
+    });
+  }
+
+  // Voice button
+  const btnVoice = document.getElementById('btn-voice');
+  if (btnVoice && quote) {
+    btnVoice.addEventListener('click', () => speakText(quote, btnVoice));
+  }
 }
 
 // ── Filter + pick ─────────────────────────────────────────
