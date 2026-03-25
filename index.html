@@ -460,25 +460,24 @@
 const ANILIST = 'https://graphql.anilist.co';
 
 // 物語シリーズ アニメ化済み作品
-// search: で検索後、タイトルに "monogatari" / "物語" が含まれるか必ず検証する
+// verify: 取得したアニメのロマジタイトルに必ず含まれるべき文字列（小文字）
 const SERIES_LIST = [
-  { search: 'Bakemonogatari',                  label: '化物語' },
-  { search: 'Nisemonogatari',                  label: '偽物語' },
-  { search: 'Nekomonogatari Kuro',             label: 'ネコ物語（黒）' },
-  { search: 'Monogatari Series Second Season', label: '物語シリーズ セカンドシーズン' },
-  { search: 'Hanamonogatari',                  label: '花物語' },
-  { search: 'Tsukimonogatari',                 label: '憑物語' },
-  { search: 'Owarimonogatari',                 label: '終物語' },
-  { search: 'Koyomimonogatari',                label: '暦物語' },
-  { search: 'Owarimonogatari 2nd Season',      label: '終物語（下）' },
-  { search: 'Zoku Owarimonogatari',            label: '続・終物語' },
+  { search: 'Bakemonogatari',                  verify: 'bakemonogatari',  label: '化物語' },
+  { search: 'Nisemonogatari',                  verify: 'nisemonogatari',  label: '偽物語' },
+  { search: 'Nekomonogatari Kuro',             verify: 'nekomonogatari',  label: 'ネコ物語（黒）' },
+  { search: 'Monogatari Series Second Season', verify: 'second season',   label: '物語シリーズ セカンドシーズン' },
+  { search: 'Hanamonogatari',                  verify: 'hanamonogatari',  label: '花物語' },
+  { search: 'Tsukimonogatari',                 verify: 'tsukimonogatari', label: '憑物語' },
+  { search: 'Owarimonogatari',                 verify: 'owarimonogatari', label: '終物語' },
+  { search: 'Koyomimonogatari',                verify: 'koyomimonogatari',label: '暦物語' },
+  { search: 'Owarimonogatari 2nd Season',      verify: 'owarimonogatari', label: '終物語（下）' },
+  { search: 'Zoku Owarimonogatari',            verify: 'owarimonogatari', label: '続・終物語' },
 ];
 
-// 取得したアニメが確かに物語シリーズかチェック
-function isMonogatari(title) {
-  const r = (title?.romaji  || '').toLowerCase();
-  const n =  title?.native  || '';
-  return r.includes('monogatari') || n.includes('物語');
+// ロマジタイトルに verify 文字列が含まれるか厳密チェック
+function isMonogatari(title, verify) {
+  const romaji = (title?.romaji || '').toLowerCase();
+  return romaji.includes(verify);
 }
 
 const QUERY = `
@@ -531,7 +530,7 @@ const loadingStatus   = document.getElementById('loading-status');
 const progressBar     = document.getElementById('progress-bar');
 
 // ── Fetch one series (all pages) ──────────────────────────
-async function fetchSeries(search, label) {
+async function fetchSeries(search, verify, label) {
   let page = 1, hasNext = true;
   const edges = [];
 
@@ -547,9 +546,9 @@ async function fetchSeries(search, label) {
 
     const media = json.data.Media;
 
-    // タイトルに "monogatari" / "物語" が含まれない場合は別作品と判断してスキップ
-    if (!isMonogatari(media.title)) {
-      console.warn(`[skip] "${label}" → AniList returned "${media.title.romaji}" — not a Monogatari series`);
+    // ロマジタイトルに verify 文字列が含まれない場合は別作品と判断してスキップ
+    if (!isMonogatari(media.title, verify)) {
+      console.warn(`[skip] "${label}" → AniList returned "${media.title.romaji}" (verify="${verify}") — not matched`);
       break;
     }
 
@@ -575,10 +574,10 @@ async function fetchSeries(search, label) {
 // ── Fetch all series sequentially ────────────────────────
 async function fetchAll() {
   for (let i = 0; i < SERIES_LIST.length; i++) {
-    const { search, label } = SERIES_LIST[i];
+    const { search, verify, label } = SERIES_LIST[i];
     loadingStatus.textContent = `「${label}」を取得中… (${i + 1}/${SERIES_LIST.length})`;
     progressBar.style.width = `${((i + 1) / SERIES_LIST.length) * 100}%`;
-    try { await fetchSeries(search, label); } catch(e) { /* skip failed */ }
+    try { await fetchSeries(search, verify, label); } catch(e) { /* skip failed */ }
     if (i < SERIES_LIST.length - 1) await new Promise(r => setTimeout(r, 350));
   }
 }
